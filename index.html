@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>2あっぷろおだー</title>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const supabaseUrl = 'https://ggagdvuzmgvshijokxvs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnYWdkdnV6bWd2c2hpam9reHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0Nzk5NTMsImV4cCI6MjA3MzA1NTk1M30.E4-S3I2Jisuk45TEdoSCFWEouj28V8VwI5KkuAun9cQ';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    window.uploadFile = async function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('ファイルを選択してください');
+        return;
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('このファイル形式は許可されていません');
+        return;
+      }
+
+      document.getElementById('status').innerText = 'アップロード中...';
+
+      const timestamp = Date.now();
+      const uniqueFileName = `${timestamp}_${file.name}`;
+
+      try {
+        const { data, error } = await supabase.storage
+          .from('images')
+          .upload(`uploads/${uniqueFileName}`, file);
+
+        if (error) throw error;
+
+        const fileUrl = `${supabaseUrl}/storage/v1/object/public/images/uploads/${uniqueFileName}`;
+        document.getElementById('status').innerHTML = `アップロード成功: <a href="${fileUrl}" target="_blank">${fileUrl}</a>`;
+        console.log('Uploaded:', data);
+      } catch (error) {
+        document.getElementById('status').innerText = 'アップロードに失敗しました';
+        console.error(error);
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>画像・動画アップロード（ファイル名に日本語が含まれてると出来ません）</h1>
+  <input type="file" id="fileInput" accept="image/jpeg, image/png, video/mp4" />
+  <button onclick="uploadFile()">アップロード</button>
+
+  <div id="status"></div>
+</body>
+</html>
